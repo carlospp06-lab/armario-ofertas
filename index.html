@@ -115,6 +115,20 @@ video.scan{width:100%;border-radius:14px;background:#000;aspect-ratio:3/4;object
 .feed-item{display:flex;gap:12px;align-items:center}
 .feed-item .t{flex:1}
 .hscroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.store-pick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sp{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--line);border-radius:12px;background:#fff;text-align:left;font-size:14px}
+.sp .logo,.logo-lg{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex:none}
+.logo-lg{width:42px;height:42px;border-radius:12px;font-size:12px}
+.sp span:nth-child(2){flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sp .ck{color:var(--muted);font-weight:600}
+.sp.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.sp.on .ck{color:var(--ok)}
+.offer{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.offer .t{flex:1;min-width:0}
+.offer .t b{display:block}
+.offer .t span{display:block;font-size:13px;color:var(--muted)}
+.mini{font-size:13px;font-weight:600;padding:6px 11px;border-radius:999px;border:1px solid var(--line);text-decoration:none;color:var(--ink);background:#fff}
+.mini.accent{background:var(--accent);border-color:var(--accent);color:#fff}
 .seg{display:flex;background:#E9E5DD;border-radius:999px;padding:3px}
 .seg button{flex:1;border:0;background:none;padding:8px 10px;border-radius:999px;font-size:14px}
 .seg button.on{background:#fff;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
@@ -153,6 +167,12 @@ video.scan{width:100%;border-radius:14px;background:#000;aspect-ratio:3/4;object
     <div id="ward"></div>
   </section>
 
+  <!-- TIENDAS -->
+  <section class="view" id="v-shops">
+    <header class="top"><div><h1>Tiendas</h1><p>Elige tus tiendas y mira sus ofertas para ti</p></div></header>
+    <div id="stores"></div>
+  </section>
+
   <!-- ESTILO -->
   <section class="view" id="v-style">
     <header class="top"><div><h1>Mi estilo</h1><p>Sube fotos de conjuntos que llevas a menudo</p></div></header>
@@ -167,8 +187,6 @@ video.scan{width:100%;border-radius:14px;background:#000;aspect-ratio:3/4;object
       <h2 style="margin-bottom:4px">Ajustes</h2>
       <label class="field">Buscar ropa de</label>
       <div class="seg" id="seg-gender"><button data-g="hombre">Hombre</button><button data-g="mujer">Mujer</button></div>
-      <label class="field">Tiendas</label>
-      <div class="chips" id="store-toggles"></div>
       <label class="field">Datos</label>
       <div class="row wrap" style="gap:8px"><button class="btn ghost" id="btn-export">Exportar copia</button><button class="btn ghost" id="btn-import">Importar</button></div>
       <input type="file" accept="application/json" id="file-import" hidden>
@@ -181,6 +199,7 @@ video.scan{width:100%;border-radius:14px;background:#000;aspect-ratio:3/4;object
   <button data-v="feed" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l2.4 5.6L20 9.3l-4.4 3.9 1.3 5.8L12 16l-4.9 3 1.3-5.8L4 9.3l5.6-.7z"/></svg>Para ti</button>
   <button data-v="scan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8V5h3M17 5h3v3M20 16v3h-3M7 19H4v-3"/><circle cx="12" cy="12" r="3.5"/></svg>Escanear</button>
   <button data-v="ward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 6.5a1.8 1.8 0 1 1 1.8-1.8c0 1.2-1.8 1.6-1.8 3L3.5 14.5c-.8.6-.4 1.8.6 1.8h15.8c1 0 1.4-1.2.6-1.8L12 7.7"/></svg>Armario</button>
+  <button data-v="shops"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>Tiendas</button>
   <button data-v="style"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="9.5" r="1.3" fill="currentColor"/><circle cx="14.5" cy="8.5" r="1.3" fill="currentColor"/><circle cx="16" cy="13" r="1.3" fill="currentColor"/><path d="M12 20.5c-1.5 0-2-1-1.3-2.2.7-1.2 0-2.3-1.5-2.3"/></svg>Estilo</button>
 </div></nav>
 
@@ -191,7 +210,7 @@ video.scan{width:100%;border-radius:14px;background:#000;aspect-ratio:3/4;object
 
 <script>
 'use strict';
-const APP_VERSION = '0.1.0';
+const APP_VERSION = '0.2.0';
 
 /* =========================================================
    1. COLORES — paleta de nombres de moda + utilidades
@@ -533,21 +552,37 @@ function tipFor(base){
    y la abre en la web/app de la tienda. Edita aquí si una URL cambia.
    ========================================================= */
 const enc = encodeURIComponent;
+// url: búsqueda directa en la web de la tienda. Si no hay, se busca en Google dentro de su web (site:).
+// vibes: qué estilo vende sobre todo (para elegir qué ofertas proponer en cada una).
 const STORES = [
-  {id:'zara', n:'Zara', bg:'#000', url:(q,g)=>`https://www.zara.com/es/es/search?searchTerm=${enc(q)}&section=${g==='mujer'?'WOMAN':'MAN'}`},
-  {id:'bershka', n:'Bershka', bg:'#3B3B3B', url:(q,g)=>`https://www.bershka.com/es/q/${enc(q+' '+g)}`},
-  {id:'pull', n:'Pull&Bear', bg:'#5A6B5D', url:(q,g)=>`https://www.pullandbear.com/es/q/${enc(q+' '+g)}`},
-  {id:'zalando', n:'Zalando', bg:'#FF6900', url:(q,g)=>`https://www.zalando.es/catalogo/?q=${enc(q+' '+g)}`},
-  {id:'jd', n:'JD Sports', bg:'#111', url:(q,g)=>`https://www.jdsports.es/search/${enc(q+' '+g).replace(/%20/g,'+')}/`},
+  {id:'zara', n:'Zara', logo:'ZA', bg:'#000', domain:'zara.com', vibes:['casual','smart','sport'], url:(q,g)=>`https://www.zara.com/es/es/search?searchTerm=${enc(q)}&section=${g==='mujer'?'WOMAN':'MAN'}`},
+  {id:'bershka', n:'Bershka', logo:'BSK', bg:'#3B3B3B', domain:'bershka.com', vibes:['casual','sport'], url:(q,g)=>`https://www.bershka.com/es/q/${enc(q+' '+g)}`},
+  {id:'pull', n:'Pull&Bear', logo:'P&B', bg:'#5A6B5D', domain:'pullandbear.com', vibes:['casual','sport'], url:(q,g)=>`https://www.pullandbear.com/es/q/${enc(q+' '+g)}`},
+  {id:'zalando', n:'Zalando', logo:'Z', bg:'#FF6900', domain:'zalando.es', vibes:['casual','smart','sport'], url:(q,g)=>`https://www.zalando.es/catalogo/?q=${enc(q+' '+g)}`},
+  {id:'jd', n:'JD Sports', logo:'JD', bg:'#111', domain:'jdsports.es', vibes:['sport'], url:(q,g)=>`https://www.jdsports.es/search/${enc(q+' '+g).replace(/%20/g,'+')}/`},
+  {id:'stradivarius', n:'Stradivarius', logo:'STR', bg:'#8C6A4F', domain:'stradivarius.com', vibes:['casual','smart'], g:'mujer'},
+  {id:'massimo', n:'Massimo Dutti', logo:'MD', bg:'#2F2A26', domain:'massimodutti.com', vibes:['smart','casual']},
+  {id:'mango', n:'Mango', logo:'MNG', bg:'#1A1A1A', domain:'mango.com', vibes:['casual','smart']},
+  {id:'lefties', n:'Lefties', logo:'LFT', bg:'#D9442B', domain:'lefties.com', vibes:['casual','sport']},
+  {id:'hm', n:'H&M', logo:'H&M', bg:'#D6001C', domain:'hm.com', vibes:['casual','smart','sport'], url:(q,g)=>`https://www2.hm.com/es_es/search-results.html?q=${enc(q+' '+g)}`},
+  {id:'springfield', n:'Springfield', logo:'SPF', bg:'#2E4A3A', domain:'myspringfield.com', vibes:['casual','smart']},
+  {id:'asos', n:'ASOS', logo:'AS', bg:'#2D2D2D', domain:'asos.com', vibes:['casual','smart','sport'], url:(q,g)=>`https://www.asos.com/es/search/?q=${enc(q+' '+g)}`},
+  {id:'nike', n:'Nike', logo:'NK', bg:'#111', domain:'nike.com', vibes:['sport'], url:(q,g)=>`https://www.nike.com/es/w?q=${enc(q+' '+g)}`},
+  {id:'adidas', n:'Adidas', logo:'AD', bg:'#000', domain:'adidas.es', vibes:['sport'], url:(q,g)=>`https://www.adidas.es/search?q=${enc(q+' '+g)}`},
+  {id:'sprinter', n:'Sprinter', logo:'SP', bg:'#E30613', domain:'sprintersports.com', vibes:['sport']},
 ];
+const STORE = Object.fromEntries(STORES.map(s=>[s.id,s]));
 const shopping = (q,g)=>`https://www.google.com/search?tbm=shop&tbs=mr:1,sales:1&q=${enc(q+' '+g)}`;
-const STORE_LOGO = {zara:'ZA', bershka:'BSK', pull:'P&B', zalando:'Z', jd:'JD'};
+const storeSearch = (s,q,g) => s.url ? s.url(q,g) : `https://www.google.com/search?q=${enc(`site:${s.domain} ${q} ${g}`)}`;
+const storeOffers = (s,q,g) => shopping(`${q} ${s.n}`, g);
+const STORE_LOGO = Object.fromEntries(STORES.map(s=>[s.id,s.logo]));
+const SIZES = {arriba:['XS','S','M','L','XL','XXL'], abajo:['34','36','38','40','42','44','46','48'], calzado:['36','37','38','39','40','41','42','43','44','45','46']};
 
 /* =========================================================
    6. ESTADO (guardado en el dispositivo)
    ========================================================= */
 const KEY = 'armario-ofertas-v1';
-const state = Object.assign({gender:'hombre', stores:{zara:1,bershka:1,pull:1,zalando:1,jd:1}, outfits:[], wardrobe:[]}, (()=>{ try{ return JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ return {}; } })());
+const state = Object.assign({gender:'hombre', stores:{zara:1,bershka:1,pull:1,zalando:1,jd:1}, sizes:{}, activeStore:null, outfits:[], wardrobe:[]}, (()=>{ try{ return JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ return {}; } })());
 function save(){
   try{ localStorage.setItem(KEY, JSON.stringify(state)); }
   catch(e){ toast('Memoria llena: borra alguna foto'); }
@@ -566,7 +601,7 @@ function show(v){
   document.querySelectorAll('.view').forEach(e=>e.classList.toggle('on', e.id==='v-'+v));
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on', b.dataset.v===v));
   window.scrollTo(0,0);
-  if (v==='feed') renderFeed(); if (v==='ward') renderWard(); if (v==='style') renderStyle();
+  if (v==='feed') renderFeed(); if (v==='ward') renderWard(); if (v==='style') renderStyle(); if (v==='shops') renderStores();
 }
 document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.v));
 
@@ -574,18 +609,77 @@ function openSheet(html){ $('#sheet-body').innerHTML=html; $('#sheet').classList
 function closeSheet(){ $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); stopCamera(); }
 $('#scrim').onclick = closeSheet;
 
+function sizeFor(typeId){ const c=TYPE[typeId].cat; return state.sizes[c==='abrigo'?'arriba':c]; }
+function myStores(){ return STORES.filter(s=>state.stores[s.id] && (!s.g || s.g===state.gender)); }
 function storeSheet(typeId, colorId, extra=''){
   const q = `${TYPE[typeId].n} ${COLOR[colorId].n}`.toLowerCase(), g = state.gender;
-  const st = STORES.filter(s=>state.stores[s.id]);
+  const st = myStores(), size = sizeFor(typeId);
   openSheet(`
     <div class="row" style="margin-bottom:6px"><span class="sw lg" style="background:${COLOR[colorId].hex}"></span>
-      <div><h2>${esc(cap(q))}</h2><div class="small muted">${esc(extra||'Busca esta prenda en tus tiendas')}</div></div></div>
+      <div><h2>${esc(cap(q))}</h2><div class="small muted">${esc(extra||'Busca esta prenda en tus tiendas')}${size?` · tu talla: <b>${esc(size)}</b>`:''}</div></div></div>
     <div class="stores">
       <a class="store wide" href="${shopping(q,g)}" target="_blank" rel="noopener"><span class="logo" style="background:var(--accent)">%</span><span>Solo ofertas, todas las tiendas<small>Google Shopping · filtro «en oferta»</small></span></a>
-      ${st.map(s=>`<a class="store" href="${s.url(q,g)}" target="_blank" rel="noopener"><span class="logo" style="background:${s.bg}">${STORE_LOGO[s.id]}</span>${s.n}</a>`).join('')}
-      ${st.filter(s=>s.sale).map(s=>`<a class="store" href="${s.sale(q,g)}" target="_blank" rel="noopener"><span class="logo" style="background:${s.bg}">%</span>Rebajas ${s.n}</a>`).join('')}
+      ${st.map(s=>`<a class="store" href="${storeSearch(s,q,g)}" target="_blank" rel="noopener"><span class="logo" style="background:${s.bg}">${esc(s.logo)}</span>${esc(s.n)}</a>`).join('')}
     </div>
+    ${st.length?'':'<p class="small muted">No tienes tiendas elegidas: añádelas en la pestaña Tiendas.</p>'}
     <p class="small muted" style="margin:14px 2px 0">Se abre la búsqueda en la tienda. Si tienes su app instalada, el móvil puede abrirla directamente.</p>`);
+}
+
+/* ---------- TIENDAS ---------- */
+// Ideas de compra para una tienda: lo que combina con tu armario + tus colores, filtrado por lo que vende esa tienda
+function storeIdeas(store){
+  const seen=new Set(), out=[], g=state.gender;
+  const add = (type,color,why,from) => {
+    if (!TYPE[type] || (TYPE[type].g && TYPE[type].g!==g)) return;
+    if (!store.vibes.includes(TYPE[type].vibe) && TYPE[type].cat!=='calzado') return;
+    const k=type+'|'+color; if (seen.has(k)) return; seen.add(k); out.push({type,color,why,from});
+  };
+  for (const w of state.wardrobe.slice(0,6)){
+    for (const r of recommend(w)) for (const i of r.items.filter(i=>!i.owned).slice(0,2))
+      add(i.type, i.id, i.why, `Combina con tu ${TYPE[w.type].n.toLowerCase()} ${COLOR[w.color].n}`);
+  }
+  const prof = styleProfile();
+  if (prof.has){
+    const byVibe = {sport:['sudadera','joggers','zapatillas','camiseta','plumifero'], casual:['jersey','vaqueros','camiseta','cazadora','zapatillas','sobrecamisa'], smart:['camisa','chinos','jersey','abrigo','zapatos','blazer']};
+    const types = store.vibes.flatMap(v=>byVibe[v]);
+    prof.top.slice(0,4).forEach((p,i)=>{
+      for (let j=0;j<types.length;j++){ const t=types[(i+j)%types.length]; if (CAT_COLORS[TYPE[t].cat].includes(p.id)){ add(typeForColor([t],p.id), p.id, `Uno de tus colores más usados (${Math.round(p.w*100)} %)`, 'En tu estilo'); break; } }
+    });
+  }
+  return out.slice(0,10);
+}
+function renderStores(){
+  const el=$('#stores'), g=state.gender, mine=myStores();
+  if (!state.activeStore || !mine.some(s=>s.id===state.activeStore)) state.activeStore = mine[0]?.id || null;
+  const act = STORE[state.activeStore];
+  let html = `<div class="card"><div class="row" style="justify-content:space-between"><h2>Mis tiendas</h2><span class="small muted">${mine.length} elegidas</span></div>
+    <p class="small muted" style="margin:4px 0 12px">Toca para añadir o quitar. Solo se buscará en estas.</p>
+    <div class="store-pick">${STORES.filter(s=>!s.g||s.g===g).map(s=>`<button class="sp ${state.stores[s.id]?'on':''}" data-s="${s.id}"><span class="logo" style="background:${s.bg}">${esc(s.logo)}</span><span>${esc(s.n)}</span><span class="ck">${state.stores[s.id]?'✓':'+'}</span></button>`).join('')}</div></div>`;
+  if (act){
+    const ideas = storeIdeas(act);
+    html += `<div class="hscroll" style="margin:4px 0 12px">${mine.map(s=>`<button class="chip ${s.id===act.id?'on':''}" data-act="${s.id}">${esc(s.n)}</button>`).join('')}</div>
+    <div class="card">
+      <div class="row" style="margin-bottom:10px"><span class="logo-lg" style="background:${act.bg}">${esc(act.logo)}</span><div style="flex:1"><h2>Ofertas en ${esc(act.n)}</h2><div class="small muted">Elegidas para tu estilo y tu armario</div></div></div>
+      <div class="row" style="gap:8px;margin-bottom:6px">
+        <a class="btn accent block" style="text-decoration:none" target="_blank" rel="noopener" href="${storeOffers(act, 'rebajas ropa', g)}">Todas sus rebajas</a>
+        <a class="btn ghost" style="text-decoration:none;flex:none" target="_blank" rel="noopener" href="https://www.${act.domain}/">Abrir web</a>
+      </div>
+      ${ideas.length ? ideas.map(i=>{ const q=`${TYPE[i.type].n} ${COLOR[i.color].n}`.toLowerCase(), size=sizeFor(i.type); return `
+        <div class="offer">
+          <span class="sw lg" style="background:${COLOR[i.color].hex}"></span>
+          <div class="t"><b>${esc(cap(q))}</b><span>${esc(i.from)} · ${esc(i.why)}</span>${size?`<span>Tu talla: ${esc(size)}</span>`:''}
+            <div class="row" style="gap:6px;margin-top:8px"><a class="mini accent" target="_blank" rel="noopener" href="${storeOffers(act,q,g)}">% Ofertas</a><a class="mini" target="_blank" rel="noopener" href="${storeSearch(act,q,g)}">Ver en ${esc(act.n)}</a></div></div>
+        </div>`; }).join('')
+      : `<div class="empty" style="padding:16px 4px">Sube fotos en <b>Estilo</b> o escanea prendas y aquí verás ofertas de ${esc(act.n)} elegidas para ti.</div>`}
+      <p class="small muted" style="margin:12px 0 0">«% Ofertas» muestra solo artículos rebajados de ${esc(act.n)} (Google Shopping). Si la tienda no publica allí sus rebajas, usa «Ver en ${esc(act.n)}».</p>
+    </div>`;
+  } else html += `<div class="card empty">Elige al menos una tienda.</div>`;
+  html += `<div class="card"><h2>Mis tallas</h2><p class="small muted" style="margin:4px 0 4px">Te las recuerdo al abrir cada prenda.</p>
+    ${[['arriba','Parte de arriba y abrigos'],['abajo','Pantalones'],['calzado','Calzado']].map(([c,l])=>`<label class="field">${l}</label><div class="hscroll">${SIZES[c].map(z=>`<button class="chip ${state.sizes[c]===z?'on':''}" data-size="${c}" data-z="${z}">${z}</button>`).join('')}</div>`).join('')}</div>`;
+  el.innerHTML = html;
+  el.querySelectorAll('.sp').forEach(b=>b.onclick=()=>{ const id=b.dataset.s; state.stores[id]=state.stores[id]?0:1; if (state.stores[id]) state.activeStore=id; save(); renderStores(); });
+  el.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>{ state.activeStore=b.dataset.act; save(); renderStores(); });
+  el.querySelectorAll('[data-size]').forEach(b=>b.onclick=()=>{ const c=b.dataset.size; state.sizes[c] = state.sizes[c]===b.dataset.z ? '' : b.dataset.z; save(); renderStores(); });
 }
 
 /* ---------- PARA TI ---------- */
@@ -836,8 +930,6 @@ function renderStyle(){
       ${prof.tags.map(t=>`<p style="margin:6px 0"><b>${esc(t.t)}.</b> <span class="muted">${esc(t.d)}</span></p>`).join('')}`;
   }
   document.querySelectorAll('#seg-gender button').forEach(b=>{ b.classList.toggle('on', b.dataset.g===state.gender); b.onclick=()=>{ state.gender=b.dataset.g; save(); renderStyle(); }; });
-  $('#store-toggles').innerHTML = STORES.map(s=>`<button class="chip ${state.stores[s.id]?'on':''}" data-s="${s.id}">${s.n}</button>`).join('');
-  $('#store-toggles').querySelectorAll('button').forEach(b=>b.onclick=()=>{ state.stores[b.dataset.s]=state.stores[b.dataset.s]?0:1; save(); renderStyle(); });
 }
 $('#btn-export').onclick = ()=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(state)],{type:'application/json'})); a.download='armario-copia.json'; a.click(); };
 $('#btn-import').onclick = ()=>$('#file-import').click();
