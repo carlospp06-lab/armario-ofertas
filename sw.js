@@ -3,7 +3,7 @@
    - La página se pide primero a internet: si hay versión nueva, se usa en cuanto se abre.
    - Solo guarda CÓDIGO. Tus datos están en el almacenamiento del navegador y no se tocan.
    Al publicar una versión nueva, sube VERSION (y APP_VERSION en index.html). */
-const VERSION = '0.2.0';
+const VERSION = '0.3.0';
 const CACHE = 'armario-ofertas-' + VERSION;
 const FONTS = 'armario-ofertas-fuentes';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png'];
@@ -52,7 +52,7 @@ self.addEventListener('fetch', e => {
     return;
   }
   if (url.origin !== location.origin) return;
-  if (req.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('/') || url.pathname.endsWith('.webmanifest')) {
+  if (req.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('/') || url.pathname.endsWith('.webmanifest') || url.pathname.endsWith('.json')) {
     e.respondWith(networkFirst(req));
     return;
   }
